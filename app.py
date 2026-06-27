@@ -21,6 +21,13 @@ events = [
 def home():
     return "Welcome to the Home Page", 200
 
+app.route('/events', methods=["GET"])
+def get_events():
+    all_events = []
+    for e in events:
+        all_events.append(e.__dict__)
+    return jsonify(all_events)
+
 @app.route("/events", methods=["POST"])
 def create_event():
     data = request.get_json()
