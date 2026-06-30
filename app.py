@@ -21,15 +21,18 @@ events = [
 def home():
     return "Welcome to the Home Page", 200
 
-@app.route('/events', methods=["GET"])
+app.route('/events', methods=["GET"])
 def get_events():
-    new_list = [event.__dict__ for event in events]
-    return jsonify(new_list)
+    all_events = []
+    for e in events:
+        all_events.append(e.__dict__)
+    return jsonify(all_events)
 
-@app.route("/events/<new_title>", methods=["POST"])
-def create_event(new_title):
-    new_id = len(events) + 1
-    new_event = Event(id=new_id, title=new_title)
+@app.route("/events", methods=["POST"])
+def create_event():
+    data = request.get_json()
+    new_id = max([e.id for e in events]) + 1 if events else 1
+    new_event = Event(id=new_id, title=data["title"])
     events.append(new_event)
     return jsonify(new_event.to_dict()), 201
 
@@ -38,7 +41,7 @@ def update_event(event_id):
     data = request.get_json()
     event = next((e for e in events if event_id == id), None)
     if not event:
-        return ("Event not found", 404)
+        return ("Event not found"), 404
     if "title" in data:
         event.title = data["title"]
     return jsonify(event.to_dict()), 201
@@ -46,12 +49,12 @@ def update_event(event_id):
 
 @app.route("/events/<int:event_id>", methods=["DELETE"])
 def delete_event(event_id):
-    for event in events:
-        event_obj = event.__dict__
-        if event_obj['id'] == event_id:
-            return "event found!"
-        else:
-            return "event not found"
+    global events
+    event = next((e for e in events if event_id == id), None)
+    if not event:
+        return ("Event not found"), 404
+    events = [e for e in events if event_id != id]
+    return ("Event deleted"), 204
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5555)
+    app.run(debug=True)
